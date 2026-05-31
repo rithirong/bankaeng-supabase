@@ -113,8 +113,9 @@ export default function DashboardPage() {
                 <MenuCard href="/grades"      icon="📊" label="ผลการเรียน"    bg="#f0fdf4" bc="#4ade80" fc="#15803d" />
                 <MenuCard href="/assignments" icon="📚" label="ส่งงาน/การบ้าน" bg="#fdf4ff" bc="#e879f9" fc="#86198f" />
                 <MenuCard href="/curriculum" icon="📑" label="จัดการหลักสูตร" bg="#f0fdfa" bc="#2dd4bf" fc="#0f766e" />
-                <MenuCard href="#" icon="⭐" label="คุณลักษณะ"    bg="#fefce8" bc="#facc15" fc="#a16207" soon />
-                <MenuCard href="#" icon="📖" label="อ่าน-คิดวิเคราะห์" bg="#fff1f2" bc="#fb7185" fc="#be123c" soon />
+                <MenuCard href="/eval-attr"        icon="⭐" label="คุณลักษณะ"    bg="#fefce8" bc="#facc15" fc="#a16207" />
+                <MenuCard href="/eval-reading"     icon="📖" label="อ่าน-คิดวิเคราะห์" bg="#fff1f2" bc="#fb7185" fc="#be123c" />
+                <MenuCard href="/eval-competency"  icon="💡" label="สมรรถนะ"     bg="#f3e8ff" bc="#a855f7" fc="#6b21a8" />
                 <MenuCard href="#" icon="📗" label="ระบบ ปพ.6"     bg="#ecfdf5" bc="#34d399" fc="#047857" soon />
                 <MenuCard href="#" icon="📄" label="ทะเบียนคุม ปพ.1" bg="#f8fafc" bc="#94a3b8" fc="#475569" soon />
               </div>
@@ -126,11 +127,11 @@ export default function DashboardPage() {
             <>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, marginTop: 4 }}>🏆 ผลงาน & เอกสาร</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 18 }}>
-                <MenuCard href="#" icon="🏆" label="เกียรติบัตร"     bg="#fffbeb" bc="#fbbf24" fc="#b45309" soon />
-                <MenuCard href="#" icon="🎓" label="วุฒิบัตรอบรม"   bg="#fff7ed" bc="#fb923c" fc="#c2410c" soon />
-                <MenuCard href="#" icon="💸" label="ทุนการศึกษา"    bg="#f0fdf4" bc="#4ade80" fc="#15803d" soon />
-                <MenuCard href="#" icon="📝" label="งานสารบรรณ"    bg="#f1f5f9" bc="#64748b" fc="#334155" soon />
-                <MenuCard href="#" icon="📖" label="สมุดบันทึกความดี" bg="#faf5ff" bc="#e9d5ff" fc="#7c3aed" soon />
+                <MenuCard href="/certificates" icon="🏆" label="เกียรติบัตร"     bg="#fffbeb" bc="#fbbf24" fc="#b45309" />
+                <MenuCard href="/trainings"    icon="🎓" label="วุฒิบัตรอบรม"   bg="#fff7ed" bc="#fb923c" fc="#c2410c" />
+                <MenuCard href="/scholarships" icon="💸" label="ทุนการศึกษา"    bg="#f0fdf4" bc="#4ade80" fc="#15803d" />
+                <MenuCard href="/documents"    icon="📝" label="งานสารบรรณ"    bg="#f1f5f9" bc="#64748b" fc="#334155" />
+                <MenuCard href="/deeds"        icon="📖" label="สมุดบันทึกความดี" bg="#faf5ff" bc="#e9d5ff" fc="#7c3aed" />
               </div>
             </>
           )}

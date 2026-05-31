@@ -71,7 +71,15 @@ export default function TopBar() {
         <Link href="/calendar"    style={navLink}>📆 ปฏิทิน</Link>
         <Link href="/assignments" style={navLink}>📚 ส่งงาน</Link>
         <Link href="/grades"      style={navLink}>📊 ผลการเรียน</Link>
-        <Link href="/curriculum"  style={navLink}>📑 หลักสูตร</Link>
+        <Link href="/curriculum"       style={navLink}>📑 หลักสูตร</Link>
+        <Link href="/eval-attr"        style={navLink}>⭐ คุณลักษณะ</Link>
+        <Link href="/eval-reading"     style={navLink}>📖 อ่าน-คิด</Link>
+        <Link href="/eval-competency"  style={navLink}>💡 สมรรถนะ</Link>
+        <Link href="/deeds"            style={navLink}>📒 บันทึกความดี</Link>
+        <Link href="/scholarships"     style={navLink}>💸 ทุนการศึกษา</Link>
+        <Link href="/certificates"     style={navLink}>🏆 เกียรติบัตร</Link>
+        <Link href="/trainings"        style={navLink}>🎓 อบรม</Link>
+        <Link href="/documents"        style={navLink}>📝 สารบรรณ</Link>
         {isAdmin && (
           <>
             <Link href="/admin/import"   style={{ ...navLink, color: '#dc2626' }}>⚙️ นำเข้า</Link>
