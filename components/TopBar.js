@@ -63,8 +63,10 @@ export default function TopBar() {
       <nav style={{ display: 'flex', gap: 2, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
         <Link href="/students"    style={navLink}>👥 นักเรียน</Link>
         <Link href="/attendance"  style={navLink}>📋 เช็คชื่อ</Link>
+        <Link href="/health"      style={navLink}>🩺 สุขภาพ</Link>
         <Link href="/savings"     style={navLink}>💰 ออมทรัพย์</Link>
         <Link href="/coop"        style={navLink}>🛒 สหกรณ์</Link>
+        <Link href="/homevisit"   style={navLink}>🏠 เยี่ยมบ้าน</Link>
         <Link href="/timetable"   style={navLink}>📅 ตารางสอน</Link>
         <Link href="/calendar"    style={navLink}>📆 ปฏิทิน</Link>
         <Link href="/assignments" style={navLink}>📚 ส่งงาน</Link>
