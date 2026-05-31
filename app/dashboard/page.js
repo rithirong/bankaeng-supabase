@@ -112,7 +112,7 @@ export default function DashboardPage() {
                 <MenuCard href="/calendar"    icon="📆" label="ปฏิทินวิชาการ" bg="#eff6ff" bc="#3b82f6" fc="#1d4ed8" />
                 <MenuCard href="/grades"      icon="📊" label="ผลการเรียน"    bg="#f0fdf4" bc="#4ade80" fc="#15803d" />
                 <MenuCard href="/assignments" icon="📚" label="ส่งงาน/การบ้าน" bg="#fdf4ff" bc="#e879f9" fc="#86198f" />
-                <MenuCard href="#" icon="📑" label="จัดการหลักสูตร" bg="#f0fdfa" bc="#2dd4bf" fc="#0f766e" soon />
+                <MenuCard href="/curriculum" icon="📑" label="จัดการหลักสูตร" bg="#f0fdfa" bc="#2dd4bf" fc="#0f766e" />
                 <MenuCard href="#" icon="⭐" label="คุณลักษณะ"    bg="#fefce8" bc="#facc15" fc="#a16207" soon />
                 <MenuCard href="#" icon="📖" label="อ่าน-คิดวิเคราะห์" bg="#fff1f2" bc="#fb7185" fc="#be123c" soon />
                 <MenuCard href="#" icon="📗" label="ระบบ ปพ.6"     bg="#ecfdf5" bc="#34d399" fc="#047857" soon />

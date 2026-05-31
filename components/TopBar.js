@@ -71,6 +71,7 @@ export default function TopBar() {
         <Link href="/calendar"    style={navLink}>📆 ปฏิทิน</Link>
         <Link href="/assignments" style={navLink}>📚 ส่งงาน</Link>
         <Link href="/grades"      style={navLink}>📊 ผลการเรียน</Link>
+        <Link href="/curriculum"  style={navLink}>📑 หลักสูตร</Link>
         {isAdmin && (
           <>
             <Link href="/admin/import"   style={{ ...navLink, color: '#dc2626' }}>⚙️ นำเข้า</Link>
