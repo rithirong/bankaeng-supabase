@@ -80,10 +80,15 @@ export default function TopBar() {
         <Link href="/certificates"     style={navLink}>🏆 เกียรติบัตร</Link>
         <Link href="/trainings"        style={navLink}>🎓 อบรม</Link>
         <Link href="/documents"        style={navLink}>📝 สารบรรณ</Link>
+        <Link href="/personnel-info"  style={navLink}>👤 บุคลากร</Link>
+        <Link href="/personnel"       style={navLink}>⏱️ ลงเวลา</Link>
+        <Link href="/papol6"          style={navLink}>📗 ปพ.6</Link>
+        <Link href="/papol1"          style={navLink}>📄 ปพ.1</Link>
         {isAdmin && (
           <>
-            <Link href="/admin/import"   style={{ ...navLink, color: '#dc2626' }}>⚙️ นำเข้า</Link>
-            <Link href="/admin/rollover" style={{ ...navLink, color: '#9333ea' }}>🔄 เลื่อนชั้น</Link>
+            <Link href="/admin/import"    style={{ ...navLink, color: '#dc2626' }}>⚙️ นำเข้า</Link>
+            <Link href="/admin/rollover"  style={{ ...navLink, color: '#9333ea' }}>🔄 เลื่อนชั้น</Link>
+            <Link href="/admin/settings"  style={{ ...navLink, color: '#b45309' }}>⚙️ ตั้งค่า</Link>
           </>
         )}
       </nav>

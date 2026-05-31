@@ -116,8 +116,8 @@ export default function DashboardPage() {
                 <MenuCard href="/eval-attr"        icon="⭐" label="คุณลักษณะ"    bg="#fefce8" bc="#facc15" fc="#a16207" />
                 <MenuCard href="/eval-reading"     icon="📖" label="อ่าน-คิดวิเคราะห์" bg="#fff1f2" bc="#fb7185" fc="#be123c" />
                 <MenuCard href="/eval-competency"  icon="💡" label="สมรรถนะ"     bg="#f3e8ff" bc="#a855f7" fc="#6b21a8" />
-                <MenuCard href="#" icon="📗" label="ระบบ ปพ.6"     bg="#ecfdf5" bc="#34d399" fc="#047857" soon />
-                <MenuCard href="#" icon="📄" label="ทะเบียนคุม ปพ.1" bg="#f8fafc" bc="#94a3b8" fc="#475569" soon />
+                <MenuCard href="/papol6"  icon="📗" label="ระบบ ปพ.6"     bg="#ecfdf5" bc="#34d399" fc="#047857" />
+                <MenuCard href="/papol1"  icon="📄" label="ทะเบียนคุม ปพ.1" bg="#f8fafc" bc="#94a3b8" fc="#475569" />
               </div>
             </>
           )}
@@ -142,8 +142,11 @@ export default function DashboardPage() {
           <div className="card">
             <h3 style={{ margin: '0 0 12px', color: '#374151', fontSize: 15 }}>⚙️ ผู้ดูแลระบบ</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
-              <MenuCard href="/admin/import"   icon="📥" label="นำเข้าข้อมูล"   bg="#fef2f2" bc="#fca5a5" fc="#dc2626" />
-              <MenuCard href="/admin/rollover" icon="🔄" label="เลื่อนชั้น"     bg="#faf5ff" bc="#c084fc" fc="#9333ea" />
+              <MenuCard href="/admin/import"    icon="📥" label="นำเข้าข้อมูล"   bg="#fef2f2" bc="#fca5a5" fc="#dc2626" />
+              <MenuCard href="/admin/rollover"  icon="🔄" label="เลื่อนชั้น"     bg="#faf5ff" bc="#c084fc" fc="#9333ea" />
+              <MenuCard href="/personnel-info"  icon="👤" label="ข้อมูลบุคลากร"  bg="#f0f9ff" bc="#7dd3fc" fc="#0369a1" />
+              <MenuCard href="/personnel"       icon="⏱️" label="ลงเวลา/การลา"  bg="#f0fdf4" bc="#86efac" fc="#166534" />
+              <MenuCard href="/admin/settings"  icon="⚙️" label="ตั้งค่าระบบ"   bg="#fff3cd" bc="#fcd34d" fc="#b45309" />
             </div>
           </div>
         )}
