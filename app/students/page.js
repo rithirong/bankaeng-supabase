@@ -85,7 +85,6 @@ export default function StudentsPage() {
       class: enrClass,
       no_in_class: enrNo,
       status: isNew ? 'ย้ายเข้า' : 'ปกติ',
-      enrolled_at: isNew ? new Date().toISOString().slice(0, 10) : undefined,
     };
     Object.keys(enrPayload).forEach(k => enrPayload[k] === undefined && delete enrPayload[k]);
     const { error: eErr } = await supabase.from('enrollments').upsert(enrPayload, { onConflict: 'school_id,student_id,academic_year' });
