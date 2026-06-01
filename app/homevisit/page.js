@@ -7,6 +7,7 @@ import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { sortByClassAndStudentId } from '@/lib/sort';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader, makeSignature2, makeNoteBox } from '@/lib/printTemplate';
 
 const CLASSES = ['อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 const STATUSES = ['ยังไม่เยี่ยม', 'เยี่ยมแล้ว', 'นัดหมาย'];
@@ -113,43 +114,34 @@ function HomeVisitMain({ session, year }) {
   }
 
   function doPrint() {
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
     const total = rows.length;
     const visited = rows.filter(r => r.visit?.visit_status === 'เยี่ยมแล้ว').length;
-    const html = `<!DOCTYPE html><html><head>
-      <meta charset="utf-8">
-      <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
-      <style>
-        body { font-family: Sarabun, sans-serif; font-size: 12px; margin: 10mm; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
-        th { background: #e2e8f0; }
-        .text-left { text-align: left; }
-        @page { size: A4 landscape; margin: 10mm; }
-      </style>
-    </head><body>
-      <h3 style="text-align:center; margin-bottom:2px;">รายงานการเยี่ยมบ้านนักเรียน ชั้น ${cls} ปีการศึกษา ${year}</h3>
-      <p style="text-align:center; font-size:11px; margin:0 0 8px">เยี่ยมแล้ว ${visited}/${total} คน</p>
+    const notYet = rows.filter(r => !r.visit?.visit_status || r.visit.visit_status === 'ยังไม่เยี่ยม').length;
+    const tbody = rows.map((r, i) => `<tr>
+      <td>${i+1}</td><td>${r.student_id}</td>
+      <td class="text-left">${r.prefix||''}${r.first_name} ${r.last_name}</td>
+      <td>${r.visit?.visit_status || 'ยังไม่เยี่ยม'}</td>
+      <td>${r.visit?.visit_date || ''}</td>
+      <td>${r.visit?.visitor_name || ''}</td>
+      <td class="text-left">${r.visit?.teacher_note || ''}</td>
+    </tr>`).join('');
+    const note = makeNoteBox(`<b>📊 สรุป (รวม ${total} คน):</b><br/>
+      - เยี่ยมแล้ว: ${visited} คน &nbsp; - ยังไม่เยี่ยม: ${notYet} คน &nbsp; - ความคืบหน้า: ${total>0?Math.round(visited/total*100):0}%`);
+    const html = `
+      ${makePrintHeader(schoolName, 'รายงานการเยี่ยมบ้านนักเรียน', `ชั้น ${cls} ปีการศึกษา ${year}`)}
       <table>
         <thead><tr>
           <th>#</th><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th>
           <th>สถานะ</th><th>วันที่เยี่ยม</th><th>ผู้เยี่ยม</th>
-          <th class="text-left">หมายเหตุ</th>
+          <th>หมายเหตุ</th>
         </tr></thead>
-        <tbody>
-          ${rows.map((r, i) => `<tr>
-            <td>${i+1}</td><td>${r.student_id}</td>
-            <td class="text-left">${r.prefix||''}${r.first_name} ${r.last_name}</td>
-            <td>${r.visit?.visit_status || 'ยังไม่เยี่ยม'}</td>
-            <td>${r.visit?.visit_date || ''}</td>
-            <td>${r.visit?.visitor_name || ''}</td>
-            <td class="text-left">${r.visit?.teacher_note || ''}</td>
-          </tr>`).join('')}
-        </tbody>
+        <tbody>${tbody}</tbody>
       </table>
-    </body></html>`;
-    const w = window.open('', '_blank', 'width=1000,height=600');
-    w.document.write(html); w.document.close();
-    setTimeout(() => w.print(), 800);
+      ${note}
+      ${makeSignature2(session.name, session.school?.director, schoolName)}
+    `;
+    makePrintWindow(html, 'landscape');
   }
 
   const visited = rows.filter(r => r.visit?.visit_status === 'เยี่ยมแล้ว').length;

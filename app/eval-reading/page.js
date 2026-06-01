@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { sortByClassAndStudentId } from '@/lib/sort';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader, makeSignature2, makeNoteBox } from '@/lib/printTemplate';
 
 const CLASSES = ['อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 const ITEMS = [
@@ -88,24 +89,30 @@ function EvalReadingMain({ session, year }) {
   }
 
   function doPrint() {
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
-    <style>body{font-family:Sarabun,sans-serif;font-size:11px;margin:8mm}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:3px 4px;text-align:center}th{background:#e2e8f0}.tl{text-align:left}@page{size:A4 landscape;margin:8mm}</style>
-    </head><body>
-    <h3 style="text-align:center">ประเมินการอ่าน คิดวิเคราะห์ และเขียน ชั้น${cls} ภาคเรียนที่${sem}/${year}</h3>
-    <table><thead><tr><th>#</th><th>รหัส</th><th class="tl">ชื่อ-สกุล</th>
-    ${ITEMS.map(it=>`<th>${it.label.split(' ').pop()}<br/><small>(${it.max})</small></th>`).join('')}
-    <th>รวม(${MAX_TOTAL})</th><th>ร้อยละ</th><th>ระดับ</th></tr></thead><tbody>
-    ${rows.map((r,i)=>{
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const counts = { ดีเยี่ยม:0, ดี:0, ผ่าน:0, ไม่ผ่าน:0 };
+    const tbody = rows.map((r,i)=>{
       const tot=ITEMS.reduce((a,it)=>a+(r[it.key]||0),0);
       const pct=Math.round(tot/MAX_TOTAL*100);
       const q=qualityLevel(pct);
-      return `<tr><td>${i+1}</td><td>${r.student_id}</td><td class="tl">${r.prefix||''}${r.first_name} ${r.last_name}</td>
+      counts[q.label]=(counts[q.label]||0)+1;
+      return `<tr><td>${i+1}</td><td>${r.student_id}</td><td class="text-left">${r.prefix||''}${r.first_name} ${r.last_name}</td>
       ${ITEMS.map(it=>`<td>${r[it.key]||0}</td>`).join('')}
-      <td><b>${tot}</b></td><td>${pct}%</td><td>${q.label}</td></tr>`;
-    }).join('')}</tbody></table></body></html>`;
-    const w=window.open('','_blank','width=900,height=600');
-    w.document.write(html); w.document.close(); setTimeout(()=>w.print(),800);
+      <td class="col-total">${tot}</td><td>${pct}%</td><td>${q.label}</td></tr>`;
+    }).join('');
+    const note = makeNoteBox(`<b>📊 สรุปผลการประเมิน (รวม ${rows.length} คน):</b><br/>
+      - ดีเยี่ยม: ${counts.ดีเยี่ยม} คน &nbsp; - ดี: ${counts.ดี} คน &nbsp; - ผ่าน: ${counts.ผ่าน} คน &nbsp; - ไม่ผ่าน: ${counts.ไม่ผ่าน} คน`);
+    const html = `
+      ${makePrintHeader(schoolName, 'รายงานประเมินการอ่าน คิดวิเคราะห์ และเขียน', `ชั้น ${cls} ภาคเรียนที่ ${sem} ปีการศึกษา ${year}`)}
+      <table><thead>
+        <tr><th>#</th><th>รหัส</th><th>ชื่อ-สกุล</th>
+        ${ITEMS.map(it=>`<th>${it.label}<br/><small style="font-size:9px;">(${it.max})</small></th>`).join('')}
+        <th>รวม(${MAX_TOTAL})</th><th>ร้อยละ</th><th>ระดับ</th></tr>
+      </thead><tbody>${tbody}</tbody></table>
+      ${note}
+      ${makeSignature2(session.name, session.school?.director, schoolName)}
+    `;
+    makePrintWindow(html, 'landscape');
   }
 
   return (<>

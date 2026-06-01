@@ -7,6 +7,7 @@ import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { sortByClassAndStudentId } from '@/lib/sort';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader, makeSignature2 } from '@/lib/printTemplate';
 
 const CLASSES = ['อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 const STATUSES = ['มา', 'ขาด', 'ลา', 'ป่วย'];
@@ -377,7 +378,49 @@ function SchoolTab({ session, year }) {
   }
 
   function doPrint() {
-    window.print();
+    if (!stats) return;
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const tbody = CLASSES.map(c => {
+      const s = stats[c];
+      const pct = s.total.all > 0 ? ((s['มา'].all / s.total.all) * 100).toFixed(1) : '—';
+      return `<tr>
+        <td>${c}</td>
+        <td>${s.total.m||0}</td><td>${s.total.f||0}</td><td><b>${s.total.all||0}</b></td>
+        <td>${s['มา'].m||0}</td><td>${s['มา'].f||0}</td><td>${s['มา'].all||0}</td>
+        <td>${s['ขาด'].m||0}</td><td>${s['ขาด'].f||0}</td><td>${s['ขาด'].all||0}</td>
+        <td>${s['ลา'].m||0}</td><td>${s['ลา'].f||0}</td><td>${s['ลา'].all||0}</td>
+        <td>${s['ป่วย'].m||0}</td><td>${s['ป่วย'].f||0}</td><td>${s['ป่วย'].all||0}</td>
+        <td>${pct}%</td>
+      </tr>`;
+    }).join('');
+    const g = grandTotal;
+    const gpct = g && g.total.all > 0 ? ((g['มา'].all / g.total.all) * 100).toFixed(1) + '%' : '—';
+    const gRow = g ? `<tr class="col-total">
+      <td>รวมทั้งหมด</td>
+      <td>${g.total.m}</td><td>${g.total.f}</td><td><b>${g.total.all}</b></td>
+      <td>${g['มา'].m}</td><td>${g['มา'].f}</td><td>${g['มา'].all}</td>
+      <td>${g['ขาด'].m}</td><td>${g['ขาด'].f}</td><td>${g['ขาด'].all}</td>
+      <td>${g['ลา'].m}</td><td>${g['ลา'].f}</td><td>${g['ลา'].all}</td>
+      <td>${g['ป่วย'].m}</td><td>${g['ป่วย'].f}</td><td>${g['ป่วย'].all}</td>
+      <td>${gpct}</td>
+    </tr>` : '';
+    const html = `
+      ${makePrintHeader(schoolName, 'รายงานสถิติการมาเรียน', `ประจำวัน${dateLabel}`)}
+      <table><thead>
+        <tr>
+          <th rowspan="2">ชั้น</th>
+          <th colspan="3">จำนวนนักเรียน</th>
+          <th colspan="3">มา</th>
+          <th colspan="3">ขาด</th>
+          <th colspan="3">ลา</th>
+          <th colspan="3">ป่วย</th>
+          <th rowspan="2">%มา</th>
+        </tr>
+        <tr>${['ช','ญ','รวม','ช','ญ','รวม','ช','ญ','รวม','ช','ญ','รวม','ช','ญ','รวม'].map(h=>`<th>${h}</th>`).join('')}</tr>
+      </thead><tbody>${tbody}${gRow}</tbody></table>
+      ${makeSignature2(session.name, session.school?.director, schoolName)}
+    `;
+    makePrintWindow(html, 'landscape');
   }
 
   // คำนวณ grand total

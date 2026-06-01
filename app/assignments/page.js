@@ -7,6 +7,7 @@ import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { sortByClassAndStudentId } from '@/lib/sort';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader, makeSignature2, makeNoteBox } from '@/lib/printTemplate';
 
 const CLASSES = ['อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 
@@ -317,27 +318,30 @@ function ScoresTab({ session, year }) {
 
   function printScores() {
     if (!selAssignment || !students.length) return;
-    const rows = students.map((s, i) => {
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    let sumScore = 0, countScored = 0;
+    const tbody = students.map((s, i) => {
       const sc = scoreMap[s.student_id];
       const v = sc !== '' && sc !== undefined ? parseFloat(sc) : null;
+      if (v !== null) { sumScore += v; countScored++; }
       return `<tr>
-        <td>${i+1}</td><td>${s.student_id}</td><td>${s.name}</td>
-        <td style="text-align:center">${v !== null ? v : '—'}</td>
-        <td style="text-align:center">${selAssignment.max_score}</td>
-        <td style="text-align:center">${v !== null ? ((v/selAssignment.max_score)*100).toFixed(1)+'%' : '—'}</td>
+        <td>${i+1}</td><td>${s.student_id}</td><td class="text-left">${s.name}</td>
+        <td>${v !== null ? v : '—'}</td>
+        <td>${selAssignment.max_score}</td>
+        <td>${v !== null ? ((v/selAssignment.max_score)*100).toFixed(1)+'%' : '—'}</td>
       </tr>`;
     }).join('');
-    const w = window.open('', '_blank');
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
-      <style>body{font-family:'Sarabun',sans-serif;margin:10mm;font-size:12px}h2,h3{text-align:center;margin:2px 0}
-      table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #000;padding:4px 8px}th{background:#e2e8f0}
-      @media print{button{display:none}}</style></head><body>
-      <h2>รายงานคะแนน: ${selAssignment.title}</h2>
-      <h3>วิชา ${selAssignment.subject} ชั้น ${cls} ปีการศึกษา ${year}</h3>
-      <button onclick="window.print()" style="margin:8px auto;display:block;padding:6px 20px;cursor:pointer">🖨️ พิมพ์</button>
-      <table><tr><th>#</th><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th><th>คะแนน</th><th>เต็ม</th><th>%</th></tr>${rows}</table>
-      </body></html>`);
-    w.document.close();
+    const avg = countScored > 0 ? (sumScore/countScored).toFixed(2) : '—';
+    const note = makeNoteBox(`<b>📊 สรุป:</b> ส่งงาน ${countScored}/${students.length} คน &nbsp; คะแนนเฉลี่ย: ${avg} / ${selAssignment.max_score}`);
+    const html = `
+      ${makePrintHeader(schoolName, `รายงานคะแนน: ${selAssignment.title}`, `วิชา ${selAssignment.subject} ชั้น ${cls} ปีการศึกษา ${year}`)}
+      <table><thead>
+        <tr><th>#</th><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th><th>คะแนน</th><th>เต็ม</th><th>ร้อยละ</th></tr>
+      </thead><tbody>${tbody}</tbody></table>
+      ${note}
+      ${makeSignature2(session.name, session.school?.director, schoolName)}
+    `;
+    makePrintWindow(html, 'portrait');
   }
 
   return (

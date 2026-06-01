@@ -6,6 +6,7 @@ import TopBar from '@/components/TopBar';
 import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader } from '@/lib/printTemplate';
 
 const MONTH_NAMES = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
   'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -137,33 +138,24 @@ function CalendarMain({ session, year }) {
   const thYear = viewYear + 543;
 
   function printCalendar() {
-    const rows = (tab === 'calendar' ? events : events).map(e => {
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const tbody = events.map(e => {
       const d = new Date(e.event_date + 'T00:00:00');
       const dateStr = d.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
       return `<tr>
-        <td>${dateStr}</td>
-        <td>${e.event_time || '—'}</td>
-        <td><b>${e.event_title}</b>${e.description ? `<br/><small>${e.description}</small>` : ''}</td>
+        <td class="nowrap">${dateStr}</td>
+        <td class="nowrap">${e.event_time || '—'}</td>
+        <td class="text-left"><b>${e.event_title}</b>${e.description ? `<br/><small style="font-size:10px;">${e.description}</small>` : ''}</td>
         <td>${e.responsible || '—'}</td>
       </tr>`;
     }).join('');
-
-    const w = window.open('', '_blank');
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
-      <style>body{font-family:'Sarabun',sans-serif;margin:10mm;font-size:12px}
-      h2,h3{text-align:center;margin:2px 0}
-      table{width:100%;border-collapse:collapse;margin-top:10px}
-      th,td{border:1px solid #000;padding:4px 8px;vertical-align:top}
-      th{background:#e2e8f0;font-weight:700}
-      @media print{button{display:none}}
-      </style></head><body>
-      <h2>ปฏิทินวิชาการ ปีการศึกษา ${year}</h2>
-      <button onclick="window.print()" style="margin:8px auto;display:block;padding:6px 20px;cursor:pointer">🖨️ พิมพ์</button>
-      <table>
+    const html = `
+      ${makePrintHeader(schoolName, 'ปฏิทินวิชาการ', `ปีการศึกษา ${year}`)}
+      <table><thead>
         <tr><th>วัน/เดือน/ปี</th><th>เวลา</th><th>กิจกรรม</th><th>ผู้รับผิดชอบ</th></tr>
-        ${rows}
-      </table></body></html>`);
-    w.document.close();
+      </thead><tbody>${tbody}</tbody></table>
+    `;
+    makePrintWindow(html, 'portrait');
   }
 
   return (

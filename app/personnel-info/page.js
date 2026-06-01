@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import TopBar from '@/components/TopBar';
 import { getSession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader } from '@/lib/printTemplate';
 
 export default function PersonnelInfoPage() {
   const router = useRouter();
@@ -70,20 +71,20 @@ function PersonnelMain({ session }) {
   }
 
   function doPrint() {
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
-    <style>body{font-family:Sarabun,sans-serif;font-size:12px;margin:10mm}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:4px 6px}th{background:#e2e8f0;text-align:center}.tl{text-align:left}@page{size:A4 landscape;margin:10mm}</style>
-    </head><body>
-    <h3 style="text-align:center">ทำเนียบบุคลากร โรงเรียน${session.school?.name||''}</h3>
-    <table><thead><tr><th>#</th><th>ชื่อ-สกุล</th><th>ตำแหน่ง</th><th>ประจำชั้น</th><th>เบอร์ติดต่อ</th><th>วุฒิการศึกษา</th><th>สาขา</th><th>วันบรรจุ</th></tr></thead>
-    <tbody>${teachers.map((t,i)=>{
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const tbody = teachers.map((t,i)=>{
       const p=profiles[t.id]||{};
-      return `<tr><td>${i+1}</td><td class="tl"><b>${t.name}</b></td><td>${p.position||t.position||'—'}</td>
-      <td>${t.class||'—'}</td><td>${p.phone||t.phone||'—'}</td>
-      <td>${p.edu_degree||'—'}</td><td>${p.edu_major||'—'}</td><td>${p.start_date||'—'}</td></tr>`;
-    }).join('')}</tbody></table></body></html>`;
-    const w=window.open('','_blank','width=1000,height=600');
-    w.document.write(html); w.document.close(); setTimeout(()=>w.print(),800);
+      return `<tr><td>${i+1}</td><td class="text-left"><b>${t.name}</b></td>
+      <td>${p.position||t.position||'—'}</td><td>${t.class||'—'}</td>
+      <td>${p.phone||t.phone||'—'}</td><td>${p.edu_degree||'—'}</td>
+      <td>${p.edu_major||'—'}</td><td>${p.start_date||'—'}</td></tr>`;
+    }).join('');
+    const html = `
+      ${makePrintHeader(schoolName, 'ทำเนียบบุคลากร', schoolName)}
+      <table><thead><tr><th>#</th><th>ชื่อ-สกุล</th><th>ตำแหน่ง</th><th>ประจำชั้น</th><th>เบอร์ติดต่อ</th><th>วุฒิการศึกษา</th><th>สาขา</th><th>วันบรรจุ</th></tr></thead>
+      <tbody>${tbody}</tbody></table>
+    `;
+    makePrintWindow(html, 'landscape');
   }
 
   if (view==='edit' && editTeacher) return (

@@ -6,6 +6,7 @@ import TopBar from '@/components/TopBar';
 import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader } from '@/lib/printTemplate';
 
 const CLASSES  = ['อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 const DAYS     = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์'];
@@ -102,39 +103,21 @@ function TimetableMain({ session, year }) {
   }
 
   function printTimetable() {
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
     const rows = PERIODS.map(p => {
       const cells = DAYS.map((_, di) => {
         const cell = grid[`${di+1}-${p}`];
-        return `<td>${cell?.subject ? `<b>${cell.subject}</b>${cell.teacher_name ? `<br/><span style="font-size:10px;color:#555">${cell.teacher_name}</span>` : ''}` : ''}</td>`;
+        return `<td>${cell?.subject ? `<b>${cell.subject}</b>${cell.teacher_name ? `<br/><span style="font-size:9px;">${cell.teacher_name}</span>` : ''}` : ''}</td>`;
       }).join('');
-      return `<tr><td style="background:#f1f5f9;font-weight:700;text-align:center">${p}</td>${cells}</tr>`;
+      return `<tr><th>${p}</th>${cells}</tr>`;
     }).join('');
-
-    const w = window.open('', '_blank');
-    w.document.write(`
-      <!DOCTYPE html><html><head>
-      <meta charset="utf-8">
-      <style>
-        body{font-family:'Sarabun',sans-serif;margin:10mm;font-size:12px}
-        h2,h3{text-align:center;margin:2px 0}
-        table{width:100%;border-collapse:collapse;margin-top:12px}
-        th,td{border:1px solid #000;padding:4px 6px;text-align:center;vertical-align:middle;min-width:60px}
-        th{background:#e2e8f0;font-weight:700}
-        @page{size:A4 landscape;margin:10mm}
-        @media print{button{display:none}}
-      </style></head><body>
-      <h2>ตารางสอนชั้น ${cls}</h2>
-      <h3>ปีการศึกษา ${year}</h3>
-      <button onclick="window.print()" style="margin:10px auto;display:block;padding:6px 20px;cursor:pointer">🖨️ พิมพ์</button>
-      <table>
-        <tr>
-          <th>คาบ</th>
-          ${DAYS.map(d=>`<th>${d}</th>`).join('')}
-        </tr>
-        ${rows}
-      </table>
-      </body></html>`);
-    w.document.close();
+    const html = `
+      ${makePrintHeader(schoolName, `ตารางสอนชั้น ${cls}`, `ปีการศึกษา ${year}`)}
+      <table><thead>
+        <tr><th>คาบ</th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr>
+      </thead><tbody>${rows}</tbody></table>
+    `;
+    makePrintWindow(html, 'landscape');
   }
 
   return (

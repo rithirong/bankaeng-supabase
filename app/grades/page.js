@@ -7,6 +7,7 @@ import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { sortByClassAndStudentId } from '@/lib/sort';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader, makeSignature2, makeNoteBox } from '@/lib/printTemplate';
 
 const CLASSES = ['อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 const DEFAULT_SUBJECTS = ['ภาษาไทย','คณิตศาสตร์','วิทยาศาสตร์','สังคมศึกษา','ประวัติศาสตร์','ศาสนาและวัฒนธรรม','สุขศึกษา','พลศึกษา','ศิลปะ','การงานอาชีพ','ภาษาอังกฤษ'];
@@ -157,25 +158,23 @@ function EntryTab({ session, year }) {
 
   function printGrades() {
     if (!students.length) return;
-    const hdr = subjects.map(s => `<th style="font-size:10px;white-space:nowrap">${s}</th>`).join('');
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const hdr = subjects.map(s => `<th class="nowrap">${s}</th>`).join('');
     const body = students.map((stu, i) => {
       const cells = subjects.map(subj => {
         const v = grid[stu.student_id]?.[subj];
         const n = v !== undefined && v !== '' ? parseFloat(v) : null;
-        return `<td style="text-align:center">${n !== null ? n : '—'}</td>`;
+        return `<td>${n !== null ? n : '—'}</td>`;
       }).join('');
-      return `<tr><td>${i+1}</td><td>${stu.student_id}</td><td>${stu.name}</td>${cells}</tr>`;
+      return `<tr><td>${i+1}</td><td>${stu.student_id}</td><td class="text-left">${stu.name}</td>${cells}</tr>`;
     }).join('');
-    const w = window.open('', '_blank');
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
-      <style>body{font-family:'Sarabun',sans-serif;margin:8mm;font-size:11px}h2,h3{text-align:center;margin:2px 0}
-      table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #000;padding:3px 4px;vertical-align:middle}
-      th{background:#e2e8f0;font-weight:700}@page{size:A4 landscape;margin:8mm}@media print{button{display:none}}</style></head><body>
-      <h2>บันทึกผลการเรียน ชั้น ${cls} ภาคเรียนที่ ${semester} ปีการศึกษา ${year}</h2>
-      <button onclick="window.print()" style="margin:8px auto;display:block;padding:6px 20px;cursor:pointer">🖨️ พิมพ์</button>
-      <table><tr><th>#</th><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th>${hdr}</tr>${body}</table>
-      </body></html>`);
-    w.document.close();
+    const html = `
+      ${makePrintHeader(schoolName, 'บันทึกผลการเรียน', `ชั้น ${cls} ภาคเรียนที่ ${semester} ปีการศึกษา ${year}`)}
+      <table><thead><tr><th>#</th><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th>${hdr}</tr></thead>
+      <tbody>${body}</tbody></table>
+      ${makeSignature2(session.name, session.school?.director, schoolName)}
+    `;
+    makePrintWindow(html, 'landscape');
   }
 
   return (

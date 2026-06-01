@@ -7,6 +7,7 @@ import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { sortByClassAndStudentId } from '@/lib/sort';
 import { supabase } from '@/lib/supabase';
+import { makePrintWindow, makePrintHeader, makeSignature2, makeNoteBox } from '@/lib/printTemplate';
 
 const CLASSES = ['อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 
@@ -110,38 +111,32 @@ function HealthMain({ session, year }) {
   }
 
   function doPrint() {
-    const html = `<!DOCTYPE html><html><head>
-      <meta charset="utf-8">
-      <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
-      <style>
-        body { font-family: Sarabun, sans-serif; font-size: 12px; margin: 10mm; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
-        th { background: #e2e8f0; }
-        @page { size: A4 portrait; margin: 10mm; }
-      </style>
-    </head><body>
-      <h3 style="text-align:center; margin-bottom:4px;">รายงานน้ำหนัก-ส่วนสูง ชั้น ${cls} ภาคเรียนที่ ${sem}/${year}</h3>
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const counts = { ผอม:0, ปกติ:0, เริ่มอ้วน:0, อ้วน:0 };
+    const tbody = rows.map((r, i) => {
+      const bmi = calcBMI(parseFloat(r.weight), parseFloat(r.height));
+      const res = bmi ? bmiLabel(bmi) : null;
+      if (res?.label) counts[res.label] = (counts[res.label]||0) + 1;
+      return `<tr>
+        <td>${i+1}</td><td>${r.student_id}</td>
+        <td class="text-left">${r.prefix||''}${r.first_name} ${r.last_name}</td>
+        <td>${r.weight||''}</td><td>${r.height||''}</td>
+        <td>${bmi ? bmi.toFixed(1) : ''}</td>
+        <td>${res ? res.label : ''}</td>
+      </tr>`;
+    }).join('');
+    const note = makeNoteBox(`<b>📊 สรุป (รวม ${rows.length} คน):</b><br/>
+      - ผอม: ${counts.ผอม} คน &nbsp; - ปกติ: ${counts.ปกติ} คน &nbsp; - เริ่มอ้วน: ${counts.เริ่มอ้วน} คน &nbsp; - อ้วน: ${counts.อ้วน} คน`);
+    const html = `
+      ${makePrintHeader(schoolName, 'รายงานน้ำหนัก-ส่วนสูง', `ชั้น ${cls} ภาคเรียนที่ ${sem} ปีการศึกษา ${year}`)}
       <table>
         <thead><tr><th>#</th><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th><th>น้ำหนัก(กก.)</th><th>ส่วนสูง(ซม.)</th><th>BMI</th><th>แปลผล</th></tr></thead>
-        <tbody>
-          ${rows.map((r, i) => {
-            const bmi = calcBMI(parseFloat(r.weight), parseFloat(r.height));
-            const res = bmi ? bmiLabel(bmi) : null;
-            return `<tr>
-              <td>${i+1}</td><td>${r.student_id}</td>
-              <td style="text-align:left">${r.prefix||''}${r.first_name} ${r.last_name}</td>
-              <td>${r.weight||''}</td><td>${r.height||''}</td>
-              <td>${bmi ? bmi.toFixed(1) : ''}</td>
-              <td>${res ? res.label : ''}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
+        <tbody>${tbody}</tbody>
       </table>
-    </body></html>`;
-    const w = window.open('', '_blank', 'width=800,height=600');
-    w.document.write(html); w.document.close();
-    setTimeout(() => w.print(), 800);
+      ${note}
+      ${makeSignature2(session.name, session.school?.director, schoolName)}
+    `;
+    makePrintWindow(html, 'portrait');
   }
 
   return (

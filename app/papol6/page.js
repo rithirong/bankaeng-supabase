@@ -5,6 +5,7 @@ import TopBar from '@/components/TopBar';
 import { getSession } from '@/lib/auth';
 import { useYear } from '@/lib/year';
 import { supabase } from '@/lib/supabase';
+import { getPrintCSS, makeSignature3 } from '@/lib/printTemplate';
 
 const CLASSES = ['อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 function gradeFromScore(s, max) {
@@ -88,76 +89,72 @@ function Papol6Main({ session, year }) {
     const readTotal = ['r1','r2','r3','r4','r5'].reduce((a,k)=>a+(reading[k]||0),0);
     const compTotal = ['c1','c2','c3','c4','c5'].reduce((a,k)=>a+(comp[k]||0),0);
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-      body{font-family:Sarabun,sans-serif;font-size:12pt;margin:12mm;color:#000}
-      .header{text-align:center;margin-bottom:8mm}
-      table{border-collapse:collapse;width:100%;margin-bottom:5mm}
-      th,td{border:1px solid #333;padding:3px 6px;vertical-align:middle}
-      th{background:#e2e8f0;text-align:center}
-      .section-title{background:#1e3a8a;color:#fff;padding:4px 10px;font-weight:700;font-size:13pt;margin:4mm 0 2mm}
-      .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11pt;margin-bottom:4mm}
-      .sign-area{display:flex;justify-content:space-around;margin-top:12mm;text-align:center}
-      .sign-line{border-bottom:1px dotted #333;width:120px;display:inline-block;height:20px}
-      @page{size:A4 portrait;margin:12mm}
-    </style></head><body>
-    <div class="header">
-      <div style="font-size:14pt;font-weight:700">แบบรายงานผลการพัฒนาคุณภาพผู้เรียน</div>
-      <div style="font-size:13pt">โรงเรียน${session.school?.name||''}</div>
-      <div style="font-size:12pt">ภาคเรียนที่ ${sem} ปีการศึกษา ${year}</div>
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const html = `
+    <div class="print-header">
+      <h2>แบบรายงานผลการพัฒนาคุณภาพผู้เรียน (ปพ.6)</h2>
+      <h3>${schoolName}</h3>
+      <h4>ภาคเรียนที่ ${sem} ปีการศึกษา ${year}</h4>
     </div>
-    <div class="info-grid">
-      <div><b>ชื่อ-สกุล:</b> ${stu.prefix||''}${stu.first_name} ${stu.last_name}</div>
-      <div><b>เลขประจำตัว:</b> ${stu.student_id}</div>
-      <div><b>ชั้น:</b> ${cls} เลขที่ ${stu.no||'—'}</div>
-      <div><b>ปีการศึกษา:</b> ${year}</div>
-    </div>
+    <table style="width:100%;margin-bottom:8px;border-collapse:collapse;">
+      <tr>
+        <td style="border:1px solid #000;padding:4px 8px;width:50%;"><b>ชื่อ-สกุล:</b> ${stu.prefix||''}${stu.first_name} ${stu.last_name}</td>
+        <td style="border:1px solid #000;padding:4px 8px;"><b>เลขประจำตัว:</b> ${stu.student_id}</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #000;padding:4px 8px;"><b>ชั้น:</b> ${cls} &nbsp; <b>เลขที่:</b> ${stu.no||'—'}</td>
+        <td style="border:1px solid #000;padding:4px 8px;"><b>ปีการศึกษา:</b> ${year}</td>
+      </tr>
+    </table>
 
-    <div class="section-title">1. ผลการเรียน</div>
-    <table><thead><tr><th>รายวิชา</th><th>คะแนน</th><th>คะแนนเต็ม</th><th>ระดับผล</th></tr></thead>
-    <tbody>${grades.length===0?'<tr><td colspan="4" style="text-align:center">ไม่มีข้อมูลผลการเรียน</td></tr>':
+    <div style="background:#1e3a8a;color:#fff;padding:3px 8px;font-weight:700;margin:6px 0 3px;font-size:12px;">1. ผลการเรียน</div>
+    <table><thead><tr><th class="text-left">รายวิชา</th><th>คะแนนเต็ม</th><th>คะแนนที่ได้</th><th>ระดับผล</th></tr></thead>
+    <tbody>${grades.length===0?'<tr><td colspan="4">ไม่มีข้อมูลผลการเรียน</td></tr>':
       grades.map(g=>{const{g:gl}=gradeFromScore(g.score,g.max_score);
-        return`<tr><td>${g.subject}</td><td style="text-align:center">${g.score??'—'}</td><td style="text-align:center">${g.max_score}</td><td style="text-align:center;font-weight:700">${gl}</td></tr>`;
+        return`<tr><td class="text-left">${g.subject}</td><td>${g.max_score}</td><td>${g.score??'—'}</td><td><b>${gl}</b></td></tr>`;
       }).join('')}
     </tbody></table>
 
-    <div class="section-title">2. การเข้าเรียน</div>
-    <table><thead><tr><th>มาเรียน</th><th>ขาด</th><th>ลา</th><th>ป่วย</th></tr></thead>
+    <div style="background:#1e3a8a;color:#fff;padding:3px 8px;font-weight:700;margin:6px 0 3px;font-size:12px;">2. การเข้าเรียน</div>
+    <table><thead><tr><th>มาเรียน</th><th>ขาด</th><th>ลา</th><th>ป่วย</th><th>รวมวันเรียน</th></tr></thead>
     <tbody><tr>
-      <td style="text-align:center">${report.att.filter(a=>a.status==='มา').length}</td>
-      <td style="text-align:center">${report.att.filter(a=>a.status==='ขาด').length}</td>
-      <td style="text-align:center">${report.att.filter(a=>a.status==='ลา').length}</td>
-      <td style="text-align:center">${report.att.filter(a=>a.status==='ป่วย').length}</td>
+      <td>${report.att.filter(a=>a.status==='มา').length}</td>
+      <td>${report.att.filter(a=>a.status==='ขาด').length}</td>
+      <td>${report.att.filter(a=>a.status==='ลา').length}</td>
+      <td>${report.att.filter(a=>a.status==='ป่วย').length}</td>
+      <td><b>${report.att.length}</b></td>
     </tr></tbody></table>
 
-    <div class="section-title">3. คุณลักษณะอันพึงประสงค์ (เต็ม 24)</div>
-    <table><thead><tr>${['รักชาติ','ซื่อสัตย์','มีวินัย','ใฝ่เรียน','พอเพียง','มุ่งมั่น','รักไทย','จิตสาธารณะ'].map(n=>`<th>${n}</th>`).join('')}<th>รวม</th><th>ร้อยละ</th><th>ระดับ</th></tr></thead>
-    <tbody><tr>${['s1','s2','s3','s4','s5','s6','s7','s8'].map(k=>`<td style="text-align:center">${attr[k]||0}</td>`).join('')}
-    <td style="text-align:center;font-weight:700">${attrTotal}</td>
-    <td style="text-align:center">${Math.round(attrTotal/24*100)}%</td>
-    <td style="text-align:center">${qualityLabel(attrTotal/24*100)}</td></tr></tbody></table>
+    <div style="background:#1e3a8a;color:#fff;padding:3px 8px;font-weight:700;margin:6px 0 3px;font-size:12px;">3. คุณลักษณะอันพึงประสงค์ (เต็ม 24)</div>
+    <table><thead><tr>
+      ${['รักชาติ ศาสน์ กษัตริย์','ซื่อสัตย์สุจริต','มีวินัย','ใฝ่เรียนรู้','อยู่อย่างพอเพียง','มุ่งมั่นในการทำงาน','รักความเป็นไทย','มีจิตสาธารณะ'].map(n=>`<th><div class="vertical-text" style="font-size:9px;">${n}</div></th>`).join('')}
+      <th>รวม</th><th>ร้อยละ</th><th>ระดับ</th></tr></thead>
+    <tbody><tr>${['s1','s2','s3','s4','s5','s6','s7','s8'].map(k=>`<td>${attr[k]||0}</td>`).join('')}
+    <td class="col-total">${attrTotal}</td>
+    <td>${Math.round(attrTotal/24*100)}%</td>
+    <td>${qualityLabel(attrTotal/24*100)}</td></tr></tbody></table>
 
-    <div class="section-title">4. อ่าน คิดวิเคราะห์ และเขียน (เต็ม 25)</div>
-    <table><thead><tr><th>ข้อ1</th><th>ข้อ2</th><th>ข้อ3</th><th>ข้อ4</th><th>ข้อ5</th><th>รวม</th><th>ระดับ</th></tr></thead>
-    <tbody><tr>${['r1','r2','r3','r4','r5'].map(k=>`<td style="text-align:center">${reading[k]||0}</td>`).join('')}
-    <td style="text-align:center;font-weight:700">${readTotal}</td>
-    <td style="text-align:center">${qualityLabel(readTotal/25*100)}</td></tr></tbody></table>
+    <div style="background:#1e3a8a;color:#fff;padding:3px 8px;font-weight:700;margin:6px 0 3px;font-size:12px;">4. อ่าน คิดวิเคราะห์ และเขียน (เต็ม 25)</div>
+    <table><thead><tr>
+      <th>การอ่าน ข้อ1<br/>(5)</th><th>การอ่าน ข้อ2<br/>(5)</th><th>การคิด ข้อ3<br/>(5)</th><th>การคิด ข้อ4<br/>(5)</th><th>เขียน ข้อ5<br/>(5)</th>
+      <th>รวม</th><th>ระดับ</th></tr></thead>
+    <tbody><tr>${['r1','r2','r3','r4','r5'].map(k=>`<td>${reading[k]||0}</td>`).join('')}
+    <td class="col-total">${readTotal}</td>
+    <td>${qualityLabel(readTotal/25*100)}</td></tr></tbody></table>
 
-    <div class="section-title">5. สมรรถนะสำคัญ (เต็ม 15)</div>
-    <table><thead><tr><th>สื่อสาร</th><th>การคิด</th><th>แก้ปัญหา</th><th>ทักษะชีวิต</th><th>เทคโนโลยี</th><th>รวม</th><th>ระดับ</th></tr></thead>
-    <tbody><tr>${['c1','c2','c3','c4','c5'].map(k=>`<td style="text-align:center">${comp[k]||0}</td>`).join('')}
-    <td style="text-align:center;font-weight:700">${compTotal}</td>
-    <td style="text-align:center">${qualityLabel(compTotal/15*100)}</td></tr></tbody></table>
+    <div style="background:#1e3a8a;color:#fff;padding:3px 8px;font-weight:700;margin:6px 0 3px;font-size:12px;">5. สมรรถนะสำคัญของผู้เรียน ๕ ประการ (เต็ม 15)</div>
+    <table><thead><tr>
+      <th>สื่อสาร<br/>(3)</th><th>การคิด<br/>(3)</th><th>แก้ปัญหา<br/>(3)</th><th>ทักษะชีวิต<br/>(3)</th><th>เทคโนโลยี<br/>(3)</th>
+      <th>รวม</th><th>ระดับ</th></tr></thead>
+    <tbody><tr>${['c1','c2','c3','c4','c5'].map(k=>`<td>${comp[k]||0}</td>`).join('')}
+    <td class="col-total">${compTotal}</td>
+    <td>${qualityLabel(compTotal/15*100)}</td></tr></tbody></table>
 
-    <div class="sign-area">
-      <div><div class="sign-line"></div><br/>ลงชื่อครูประจำชั้น</div>
-      <div><div class="sign-line"></div><br/>ลงชื่อผู้ปกครอง</div>
-      <div><div class="sign-line"></div><br/>ลงชื่อผู้อำนวยการ</div>
-    </div>
-    </body></html>`;
+    ${makeSignature3(session.name, session.school?.academic_head, session.school?.director, schoolName)}
+    `;
     const w=window.open('','_blank','width=800,height=900');
-    w.document.write(html); w.document.close(); setTimeout(()=>w.print(),800);
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>ปพ.6</title><style>${getPrintCSS('portrait')}</style></head><body>${html}</body></html>`);
+    w.document.close(); setTimeout(()=>w.print(),800);
   }
 
   return (<>
