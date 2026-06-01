@@ -91,14 +91,21 @@ export default function DashboardPage() {
           {/* Tab 1: งานทั่วไป */}
           {tab === 'general' && (
             <>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, marginTop: 4 }}>👧 นักเรียน</div>
+              <SectionLabel icon="👤" label="บุคลากร" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 18 }}>
-                <MenuCard href="/students"    icon="👤" label="ข้อมูลนักเรียน" bg="#ecfeff" bc="#22d3ee" fc="#0e7490" />
-                <MenuCard href="/attendance"  icon="📋" label="เช็คชื่อ"       bg="#eef2ff" bc="#6366f1" fc="#4338ca" />
+                <MenuCard href="/personnel-info" icon="🧑‍💼" label="ข้อมูลบุคลากร" bg="#f0f9ff" bc="#7dd3fc" fc="#0369a1" />
+                <MenuCard href="/personnel"      icon="⏱️" label="ลงเวลา/การลา"  bg="#f0fdf4" bc="#86efac" fc="#166534" />
+              </div>
+
+              <SectionLabel icon="👧" label="นักเรียน" />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 18 }}>
+                <MenuCard href="/students"    icon="👤" label="ข้อมูลนักเรียน"  bg="#ecfeff" bc="#22d3ee" fc="#0e7490" />
+                <MenuCard href="/attendance"  icon="📋" label="ระบบเช็คชื่อ"    bg="#eef2ff" bc="#6366f1" fc="#4338ca" />
                 <MenuCard href="/health"      icon="🩺" label="น้ำหนัก-ส่วนสูง" bg="#fef2f2" bc="#f87171" fc="#b91c1c" />
-                <MenuCard href="/savings"     icon="💰" label="ออมทรัพย์"     bg="#fffbeb" bc="#f59e0b" fc="#b45309" />
-                <MenuCard href="/coop"        icon="🛒" label="สหกรณ์ร้านค้า" bg="#ecfdf5" bc="#10b981" fc="#065f46" />
-                <MenuCard href="/homevisit"   icon="🏠" label="เยี่ยมบ้าน"   bg="#fff7ed" bc="#f97316" fc="#c2410c" />
+                <MenuCard href="/savings"     icon="💰" label="ระบบออมทรัพย์"  bg="#fffbeb" bc="#f59e0b" fc="#b45309" />
+                <MenuCard href="/assignments" icon="📚" label="ส่งงาน/การบ้าน" bg="#fdf4ff" bc="#e879f9" fc="#86198f" />
+                <MenuCard href="/coop"        icon="🛒" label="สหกรณ์ร้านค้า"  bg="#ecfdf5" bc="#10b981" fc="#065f46" />
+                <MenuCard href="/homevisit"   icon="🏠" label="เยี่ยมบ้าน"     bg="#fff7ed" bc="#f97316" fc="#c2410c" />
               </div>
             </>
           )}
@@ -106,18 +113,20 @@ export default function DashboardPage() {
           {/* Tab 2: วิชาการ */}
           {tab === 'academic' && (
             <>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, marginTop: 4 }}>📚 การเรียนการสอน</div>
+              <SectionLabel icon="📚" label="การเรียนการสอน" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 18 }}>
-                <MenuCard href="/timetable"   icon="📅" label="ตารางสอน"     bg="#f5f3ff" bc="#a78bfa" fc="#6d28d9" />
-                <MenuCard href="/calendar"    icon="📆" label="ปฏิทินวิชาการ" bg="#eff6ff" bc="#3b82f6" fc="#1d4ed8" />
-                <MenuCard href="/grades"      icon="📊" label="ผลการเรียน"    bg="#f0fdf4" bc="#4ade80" fc="#15803d" />
-                <MenuCard href="/assignments" icon="📚" label="ส่งงาน/การบ้าน" bg="#fdf4ff" bc="#e879f9" fc="#86198f" />
-                <MenuCard href="/curriculum" icon="📑" label="จัดการหลักสูตร" bg="#f0fdfa" bc="#2dd4bf" fc="#0f766e" />
-                <MenuCard href="/eval-attr"        icon="⭐" label="คุณลักษณะ"    bg="#fefce8" bc="#facc15" fc="#a16207" />
-                <MenuCard href="/eval-reading"     icon="📖" label="อ่าน-คิดวิเคราะห์" bg="#fff1f2" bc="#fb7185" fc="#be123c" />
-                <MenuCard href="/eval-competency"  icon="💡" label="สมรรถนะ"     bg="#f3e8ff" bc="#a855f7" fc="#6b21a8" />
-                <MenuCard href="/papol6"  icon="📗" label="ระบบ ปพ.6"     bg="#ecfdf5" bc="#34d399" fc="#047857" />
-                <MenuCard href="/papol1"  icon="📄" label="ทะเบียนคุม ปพ.1" bg="#f8fafc" bc="#94a3b8" fc="#475569" />
+                <MenuCard href="/curriculum"      icon="📑" label="จัดการหลักสูตร"   bg="#f0fdfa" bc="#2dd4bf" fc="#0f766e" />
+                <MenuCard href="/timetable"       icon="📅" label="ตารางสอน"         bg="#f5f3ff" bc="#a78bfa" fc="#6d28d9" />
+                <MenuCard href="/grades"          icon="📊" label="ผลการเรียน"       bg="#f0fdf4" bc="#4ade80" fc="#15803d" />
+                <MenuCard href="/calendar"        icon="📆" label="ปฏิทินวิชาการ"   bg="#eff6ff" bc="#3b82f6" fc="#1d4ed8" />
+                <MenuCard href="/eval-attr"       icon="⭐" label="ประเมินคุณลักษณะ" bg="#fefce8" bc="#facc15" fc="#a16207" />
+                <MenuCard href="/eval-reading"    icon="📖" label="อ่าน คิดวิเคราะห์" bg="#fff1f2" bc="#fb7185" fc="#be123c" />
+                <MenuCard href="/eval-competency" icon="💡" label="ประเมินสมรรถนะ"  bg="#f3e8ff" bc="#a855f7" fc="#6b21a8" />
+                <MenuCard href="/papol6"          icon="📗" label="ระบบ ปพ.6"       bg="#ecfdf5" bc="#34d399" fc="#047857" />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 4 }}>
+                <MenuCard href="/papol7"  icon="📋" label="ปพ.7 ใบรับรอง"     bg="#fef9c3" bc="#fde047" fc="#713f12" />
+                <MenuCard href="/papol1"  icon="📄" label="ทะเบียนคุม ปพ.1"   bg="#f8fafc" bc="#94a3b8" fc="#475569" />
               </div>
             </>
           )}
@@ -125,13 +134,16 @@ export default function DashboardPage() {
           {/* Tab 3: อื่นๆ */}
           {tab === 'other' && (
             <>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, marginTop: 4 }}>🏆 ผลงาน & เอกสาร</div>
+              <SectionLabel icon="🏆" label="ผลงาน & เอกสาร" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 18 }}>
-                <MenuCard href="/certificates" icon="🏆" label="เกียรติบัตร"     bg="#fffbeb" bc="#fbbf24" fc="#b45309" />
-                <MenuCard href="/trainings"    icon="🎓" label="วุฒิบัตรอบรม"   bg="#fff7ed" bc="#fb923c" fc="#c2410c" />
-                <MenuCard href="/scholarships" icon="💸" label="ทุนการศึกษา"    bg="#f0fdf4" bc="#4ade80" fc="#15803d" />
-                <MenuCard href="/documents"    icon="📝" label="งานสารบรรณ"    bg="#f1f5f9" bc="#64748b" fc="#334155" />
-                <MenuCard href="/deeds"        icon="📖" label="สมุดบันทึกความดี" bg="#faf5ff" bc="#e9d5ff" fc="#7c3aed" />
+                <MenuCard href="/certificates" icon="🏆" label="เกียรติบัตร"   bg="#fffbeb" bc="#fbbf24" fc="#b45309" />
+                <MenuCard href="/trainings"    icon="🎓" label="วุฒิบัตรอบรม" bg="#fff7ed" bc="#fb923c" fc="#c2410c" />
+                <MenuCard href="/scholarships" icon="💸" label="ทุนการศึกษา"  bg="#f0fdf4" bc="#4ade80" fc="#15803d" />
+                <MenuCard href="/documents"    icon="📝" label="งานสารบรรณ"  bg="#f1f5f9" bc="#64748b" fc="#334155" />
+              </div>
+              <SectionLabel icon="📖" label="คุณธรรม" />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 4 }}>
+                <MenuCard href="/deeds" icon="📒" label="สมุดบันทึกความดี" bg="#faf5ff" bc="#e9d5ff" fc="#7c3aed" />
               </div>
             </>
           )}
@@ -142,17 +154,23 @@ export default function DashboardPage() {
           <div className="card">
             <h3 style={{ margin: '0 0 12px', color: '#374151', fontSize: 15 }}>⚙️ ผู้ดูแลระบบ</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
-              <MenuCard href="/admin/import"    icon="📥" label="นำเข้าข้อมูล"   bg="#fef2f2" bc="#fca5a5" fc="#dc2626" />
-              <MenuCard href="/admin/rollover"  icon="🔄" label="เลื่อนชั้น"     bg="#faf5ff" bc="#c084fc" fc="#9333ea" />
-              <MenuCard href="/personnel-info"  icon="👤" label="ข้อมูลบุคลากร"  bg="#f0f9ff" bc="#7dd3fc" fc="#0369a1" />
-              <MenuCard href="/personnel"       icon="⏱️" label="ลงเวลา/การลา"  bg="#f0fdf4" bc="#86efac" fc="#166534" />
-              <MenuCard href="/admin/settings"  icon="⚙️" label="ตั้งค่าระบบ"   bg="#fff3cd" bc="#fcd34d" fc="#b45309" />
+              <MenuCard href="/admin/import"   icon="📥" label="นำเข้าข้อมูล" bg="#fef2f2" bc="#fca5a5" fc="#dc2626" />
+              <MenuCard href="/admin/rollover" icon="🔄" label="เลื่อนชั้น"   bg="#faf5ff" bc="#c084fc" fc="#9333ea" />
+              <MenuCard href="/admin/settings" icon="⚙️" label="ตั้งค่าระบบ"  bg="#fff3cd" bc="#fcd34d" fc="#b45309" />
             </div>
           </div>
         )}
 
       </div>
     </>
+  );
+}
+
+function SectionLabel({ icon, label }) {
+  return (
+    <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+      <span>{icon}</span> {label}
+    </div>
   );
 }
 

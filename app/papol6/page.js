@@ -27,22 +27,353 @@ function qualityLabel(pct) {
   return 'ไม่ผ่าน';
 }
 
+const SUBMENU = [
+  { key:'cover',   icon:'🖨️',  label:'พิมพ์หน้าปก' },
+  { key:'info',    icon:'🧑',  label:'ข้อมูลส่วนตัวนักเรียน' },
+  { key:'grades',  icon:'📊',  label:'ผลการเรียน (ปพ.6 เดิม)' },
+  { key:'comment', icon:'💬',  label:'ความเห็นครู/ผู้ปกครอง' },
+  { key:'summary', icon:'📋',  label:'สรุปผลประเมินรายบุคคล' },
+];
+
 export default function Papol6Page() {
   const router = useRouter();
   const [s, setS] = useState(null);
   const [year] = useYear();
+  const [subTab, setSubTab] = useState('summary');
   useEffect(() => {
     const sess = getSession();
     if (!sess || sess.role === 'parent') { router.replace('/'); return; }
     setS(sess);
   }, [router]);
   if (!s) return null;
-  return (<><TopBar /><div className="wrap"><div className="card">
-    <h2 style={{margin:'0 0 14px'}}>📗 แบบรายงานผลการพัฒนาคุณภาพผู้เรียน (ปพ.6)</h2>
-    <Papol6Main session={s} year={year} />
-  </div></div></>);
+  return (
+    <><TopBar /><div className="wrap"><div className="card">
+      <h2 style={{margin:'0 0 14px'}}>📗 ระบบ ปพ.6 แบบรายงานผลการพัฒนาคุณภาพผู้เรียน</h2>
+
+      {/* Sub-menu เหมือน GAS */}
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:18}}>
+        {SUBMENU.map(m=>(
+          <button key={m.key}
+            onClick={()=>setSubTab(m.key)}
+            style={{
+              padding:'10px 14px', borderRadius:10, border:'none', cursor:'pointer',
+              background: subTab===m.key ? '#1e40af' : '#f1f5f9',
+              color: subTab===m.key ? '#fff' : '#374151',
+              fontWeight:700, fontSize:13, display:'flex', alignItems:'center', gap:6,
+              boxShadow: subTab===m.key ? '0 2px 8px rgba(30,64,175,0.3)' : 'none',
+            }}>
+            <span>{m.icon}</span> {m.label}
+          </button>
+        ))}
+      </div>
+
+      {subTab==='cover'   && <Papol6Cover   session={s} year={year} />}
+      {subTab==='info'    && <Papol6Info    session={s} year={year} />}
+      {subTab==='grades'  && <Papol6Grades  session={s} year={year} />}
+      {subTab==='comment' && <Papol6Comment session={s} year={year} />}
+      {subTab==='summary' && <Papol6Main    session={s} year={year} />}
+    </div></div></>
+  );
 }
 
+// ── พิมพ์หน้าปก ──────────────────────────────
+function Papol6Cover({ session, year }) {
+  const [cls, setCls] = useState('');
+  const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+  const schoolArea = session.school?.area || '';
+
+  function doPrint() {
+    const html = `
+      <div class="print-header" style="margin-top:40mm;">
+        <h2 style="font-size:20px;margin-bottom:10px;">แบบรายงานผลการพัฒนาคุณภาพผู้เรียน</h2>
+        <h2 style="font-size:18px;margin-bottom:5px;">(ปพ.6)</h2>
+        <div style="border:2px solid #000;display:inline-block;padding:8px 30px;margin:15px 0;font-size:15px;font-weight:700;">ชั้น ${cls||'............'}</div><br/>
+        <h3 style="font-size:16px;">ปีการศึกษา ${year}</h3>
+        <h3 style="font-size:15px;">${schoolName}</h3>
+        <h4 style="font-size:13px;font-weight:normal;">${schoolArea}</h4>
+      </div>
+      <div style="text-align:center;margin-top:60px;font-size:13px;color:#333;">
+        ครูประจำชั้น: ${session.name}
+      </div>
+    `;
+    const w = window.open('','_blank','width=800,height=900');
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>หน้าปก ปพ.6</title><style>${getPrintCSS('portrait')}</style></head><body>${html}</body></html>`);
+    w.document.close(); setTimeout(()=>w.print(),800);
+  }
+
+  return (
+    <div style={{textAlign:'center',padding:'30px 0'}}>
+      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,display:'inline-block',padding:'30px 40px',marginBottom:20}}>
+        <div style={{fontSize:18,fontWeight:800,color:'#166534',marginBottom:6}}>🖨️ พิมพ์หน้าปก ปพ.6</div>
+        <div style={{fontSize:13,color:'#64748b',marginBottom:14}}>ปีการศึกษา {year} · {schoolName}</div>
+        <div style={{marginBottom:14}}>
+          <label style={{fontSize:12,fontWeight:600,marginRight:8}}>ชั้นเรียน:</label>
+          <select value={cls} onChange={e=>setCls(e.target.value)} style={{padding:'6px 10px'}}>
+            <option value="">-- เลือก --</option>{CLASSES.map(c=><option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <button className="success" style={{fontSize:14,padding:'10px 24px'}} onClick={doPrint}>🖨️ พิมพ์หน้าปก</button>
+      </div>
+    </div>
+  );
+}
+
+// ── ข้อมูลส่วนตัวนักเรียน ────────────────────
+function Papol6Info({ session, year }) {
+  const [cls, setCls] = useState(session.role==='teacher'&&session.class?session.class:'');
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  async function load() {
+    if (!cls) return alert('⚠️ เลือกชั้น');
+    setLoading(true);
+    const { data } = await supabase.from('enrollments')
+      .select('no_in_class, students!inner(student_id,prefix,first_name,last_name,dob,gender,nationality,religion,father_name,father_job,father_phone,mother_name,mother_job,address,guardian_name,guardian_relation,guardian_phone)')
+      .eq('school_id',session.schoolId).eq('academic_year',year).eq('class',cls)
+      .in('status',['ปกติ','ย้ายเข้า']).order('no_in_class');
+    setLoading(false);
+    setStudents((data||[]).map(e=>({...e.students,no:e.no_in_class})));
+  }
+
+  function doPrint() {
+    if (!students.length) return alert('⚠️ โหลดข้อมูลก่อน');
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const tbody = students.map((s,i)=>`<tr>
+      <td>${i+1}</td><td>${s.student_id}</td>
+      <td class="text-left">${s.prefix||''}${s.first_name} ${s.last_name}</td>
+      <td>${s.dob?new Date(s.dob).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}):''}</td>
+      <td>${s.gender||''}</td>
+      <td class="text-left">${s.father_name||''}</td>
+      <td class="text-left">${s.mother_name||''}</td>
+      <td>${s.guardian_phone||s.father_phone||''}</td>
+    </tr>`).join('');
+    const html = `
+      <div class="print-header">
+        <h3>ข้อมูลส่วนตัวนักเรียน ชั้น ${cls} ปีการศึกษา ${year}</h3>
+        <h4 style="font-weight:normal;">${schoolName}</h4>
+      </div>
+      <table><thead><tr><th>#</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>วันเกิด</th><th>เพศ</th><th>บิดา</th><th>มารดา</th><th>โทร</th></tr></thead>
+      <tbody>${tbody}</tbody></table>
+    `;
+    const w = window.open('','_blank','width=900,height=700');
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${getPrintCSS('landscape')}</style></head><body>${html}</body></html>`);
+    w.document.close(); setTimeout(()=>w.print(),800);
+  }
+
+  return (<>
+    <div className="row">
+      <div><label style={{fontSize:12,fontWeight:600}}>ชั้นเรียน</label>
+        <select value={cls} onChange={e=>setCls(e.target.value)}>
+          <option value="">-- เลือก --</option>{CLASSES.map(c=><option key={c}>{c}</option>)}
+        </select></div>
+      <div style={{display:'flex',gap:8,alignItems:'end'}}>
+        <button onClick={load} disabled={loading}>{loading?'⏳...':'📋 โหลด'}</button>
+        {students.length>0&&<button className="secondary" onClick={doPrint}>🖨️ พิมพ์</button>}
+      </div>
+    </div>
+    {students.length>0&&(
+      <div style={{overflowX:'auto',marginTop:14}}>
+        <table style={{fontSize:12}}>
+          <thead><tr><th>#</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>วันเกิด</th><th>เพศ</th><th>บิดา</th><th>มารดา</th><th>โทร</th></tr></thead>
+          <tbody>{students.map((s,i)=>(
+            <tr key={s.student_id}>
+              <td>{i+1}</td><td><b>{s.student_id}</b></td>
+              <td style={{textAlign:'left'}}>{s.prefix}{s.first_name} {s.last_name}</td>
+              <td>{s.dob?new Date(s.dob).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}):''}</td>
+              <td>{s.gender}</td>
+              <td style={{textAlign:'left'}}>{s.father_name}</td>
+              <td style={{textAlign:'left'}}>{s.mother_name}</td>
+              <td>{s.guardian_phone||s.father_phone}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+    )}
+  </>);
+}
+
+// ── ผลการเรียน (ปพ.6 เดิม) ──────────────────
+function Papol6Grades({ session, year }) {
+  const [cls, setCls] = useState(session.role==='teacher'&&session.class?session.class:'');
+  const [sem, setSem] = useState(1);
+  const [students, setStudents] = useState([]);
+  const [gradesMap, setGradesMap] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  async function load() {
+    if (!cls) return alert('⚠️ เลือกชั้น');
+    setLoading(true);
+    const [enrRes, grRes] = await Promise.all([
+      supabase.from('enrollments').select('no_in_class, students!inner(student_id,prefix,first_name,last_name)')
+        .eq('school_id',session.schoolId).eq('academic_year',year).eq('class',cls)
+        .in('status',['ปกติ','ย้ายเข้า']).order('no_in_class'),
+      supabase.from('grades').select('*')
+        .eq('school_id',session.schoolId).eq('academic_year',year).eq('semester',sem),
+    ]);
+    setLoading(false);
+    const stus = (enrRes.data||[]).map(e=>({...e.students,no:e.no_in_class}));
+    setStudents(stus);
+    const gm = {};
+    (grRes.data||[]).forEach(g=>{
+      if (!gm[g.student_id]) gm[g.student_id] = {};
+      gm[g.student_id][g.subject] = g;
+    });
+    setGradesMap(gm);
+  }
+
+  function doPrint() {
+    if (!students.length) return alert('⚠️ โหลดข้อมูลก่อน');
+    const schoolName = session.school?.name || 'โรงเรียนบ้านแก่ง';
+    const allSubjects = [...new Set(Object.values(gradesMap).flatMap(m=>Object.keys(m)))];
+    const hdr = allSubjects.map(s=>`<th class="nowrap" style="font-size:9px;">${s}</th>`).join('');
+    const tbody = students.map((stu,i)=>{
+      const gd = gradesMap[stu.student_id]||{};
+      const cells = allSubjects.map(sub=>{
+        const g = gd[sub];
+        const {g:gl} = g ? gradeFromScore(g.score, g.max_score) : {g:'—'};
+        return `<td>${gl}</td>`;
+      }).join('');
+      const totals = Object.values(gd);
+      const avgGPA = totals.length ? (totals.reduce((a,g)=>{const{gpa}=gradeFromScore(g.score,g.max_score);return a+(gpa||0);},0)/totals.length).toFixed(2) : '—';
+      return `<tr><td>${i+1}</td><td>${stu.student_id}</td><td class="text-left">${stu.prefix||''}${stu.first_name} ${stu.last_name}</td>${cells}<td class="col-total">${avgGPA}</td></tr>`;
+    }).join('');
+    const html = `
+      <div class="print-header">
+        <h3>ผลการเรียน ชั้น ${cls} ภาคเรียนที่ ${sem} ปีการศึกษา ${year}</h3>
+        <h4 style="font-weight:normal;">${schoolName}</h4>
+      </div>
+      <table><thead><tr><th>#</th><th>รหัส</th><th>ชื่อ-สกุล</th>${hdr}<th>GPA</th></tr></thead>
+      <tbody>${tbody}</tbody></table>
+    `;
+    const w = window.open('','_blank','width=900,height=700');
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${getPrintCSS('landscape')}</style></head><body>${html}</body></html>`);
+    w.document.close(); setTimeout(()=>w.print(),800);
+  }
+
+  return (<>
+    <div className="row">
+      <div><label style={{fontSize:12,fontWeight:600}}>ชั้นเรียน</label>
+        <select value={cls} onChange={e=>setCls(e.target.value)}>
+          <option value="">-- เลือก --</option>{CLASSES.map(c=><option key={c}>{c}</option>)}
+        </select></div>
+      <div><label style={{fontSize:12,fontWeight:600}}>ภาคเรียน</label>
+        <select value={sem} onChange={e=>setSem(Number(e.target.value))}>
+          <option value={1}>ภาคเรียนที่ 1</option><option value={2}>ภาคเรียนที่ 2</option>
+        </select></div>
+      <div style={{display:'flex',gap:8,alignItems:'end'}}>
+        <button onClick={load} disabled={loading}>{loading?'⏳...':'📋 โหลด'}</button>
+        {students.length>0&&<button className="secondary" onClick={doPrint}>🖨️ พิมพ์</button>}
+      </div>
+    </div>
+    {students.length>0&&(
+      <div style={{overflowX:'auto',marginTop:14}}>
+        <table style={{fontSize:12}}>
+          <thead><tr><th>#</th><th>รหัส</th><th>ชื่อ-สกุล</th>
+            {[...new Set(Object.values(gradesMap).flatMap(m=>Object.keys(m)))].map(s=><th key={s}>{s}</th>)}
+            <th>GPA</th></tr></thead>
+          <tbody>{students.map((stu,i)=>{
+            const gd=gradesMap[stu.student_id]||{};
+            const subs=[...new Set(Object.values(gradesMap).flatMap(m=>Object.keys(m)))];
+            const totals=Object.values(gd);
+            const avgGPA=totals.length?(totals.reduce((a,g)=>{const{gpa}=gradeFromScore(g.score,g.max_score);return a+(gpa||0);},0)/totals.length).toFixed(2):'—';
+            return (<tr key={stu.student_id}>
+              <td>{i+1}</td><td><b>{stu.student_id}</b></td>
+              <td style={{textAlign:'left'}}>{stu.prefix}{stu.first_name} {stu.last_name}</td>
+              {subs.map(sub=>{const g=gd[sub];const{g:gl}=g?gradeFromScore(g.score,g.max_score):{g:'—'};return <td key={sub}>{gl}</td>;})}
+              <td style={{fontWeight:700}}>{avgGPA}</td>
+            </tr>);
+          })}</tbody>
+        </table>
+      </div>
+    )}
+  </>);
+}
+
+// ── ความเห็นครู/ผู้ปกครอง ───────────────────
+function Papol6Comment({ session, year }) {
+  const [cls, setCls] = useState(session.role==='teacher'&&session.class?session.class:'');
+  const [sem, setSem] = useState(1);
+  const [students, setStudents] = useState([]);
+  const [commentMap, setCommentMap] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  async function load() {
+    if (!cls) return alert('⚠️ เลือกชั้น');
+    setLoading(true);
+    const [enrRes, cmRes] = await Promise.all([
+      supabase.from('enrollments').select('no_in_class, students!inner(student_id,prefix,first_name,last_name)')
+        .eq('school_id',session.schoolId).eq('academic_year',year).eq('class',cls)
+        .in('status',['ปกติ','ย้ายเข้า']).order('no_in_class'),
+      supabase.from('papol6_comments').select('*')
+        .eq('school_id',session.schoolId).eq('academic_year',year)
+        .eq('semester',sem).eq('class',cls),
+    ]);
+    setLoading(false);
+    setStudents((enrRes.data||[]).map(e=>({...e.students,no:e.no_in_class})));
+    const cm = {};
+    (cmRes.data||[]).forEach(r=>{ cm[r.student_id] = r; });
+    setCommentMap(cm);
+  }
+
+  function setComment(sid, field, val) {
+    setCommentMap(p=>({...p,[sid]:{...(p[sid]||{}), [field]:val}}));
+  }
+
+  async function save() {
+    const records = students.map(s=>({
+      school_id:session.schoolId, academic_year:year, semester:sem, class:cls,
+      student_id:s.student_id,
+      teacher_comment: commentMap[s.student_id]?.teacher_comment||'',
+      parent_comment: commentMap[s.student_id]?.parent_comment||'',
+      updated_at: new Date().toISOString(),
+    }));
+    await supabase.from('papol6_comments').upsert(records, {onConflict:'school_id,academic_year,semester,student_id'});
+    alert('✅ บันทึกแล้ว');
+  }
+
+  return (<>
+    <div style={{background:'#fef3c7',border:'1px solid #fcd34d',borderRadius:8,padding:10,marginBottom:14,fontSize:12,color:'#92400e'}}>
+      ⚠️ ต้องสร้างตาราง <b>papol6_comments</b> ใน Supabase ก่อนใช้งาน (school_id, academic_year, semester, class, student_id, teacher_comment, parent_comment)
+    </div>
+    <div className="row">
+      <div><label style={{fontSize:12,fontWeight:600}}>ชั้นเรียน</label>
+        <select value={cls} onChange={e=>setCls(e.target.value)}>
+          <option value="">-- เลือก --</option>{CLASSES.map(c=><option key={c}>{c}</option>)}
+        </select></div>
+      <div><label style={{fontSize:12,fontWeight:600}}>ภาคเรียน</label>
+        <select value={sem} onChange={e=>setSem(Number(e.target.value))}>
+          <option value={1}>ภาคเรียนที่ 1</option><option value={2}>ภาคเรียนที่ 2</option>
+        </select></div>
+      <div style={{display:'flex',gap:8,alignItems:'end'}}>
+        <button onClick={load} disabled={loading}>{loading?'⏳...':'📋 โหลด'}</button>
+        {students.length>0&&<button className="success" onClick={save}>💾 บันทึก</button>}
+      </div>
+    </div>
+    {students.length>0&&(
+      <div style={{overflowX:'auto',marginTop:14}}>
+        <table style={{fontSize:12}}>
+          <thead><tr><th>#</th><th>ชื่อ-สกุล</th><th>ความเห็นครู</th><th>ความเห็นผู้ปกครอง</th></tr></thead>
+          <tbody>{students.map((s,i)=>(
+            <tr key={s.student_id}>
+              <td>{i+1}</td>
+              <td style={{textAlign:'left'}}>{s.prefix}{s.first_name} {s.last_name}</td>
+              <td style={{padding:3}}>
+                <input value={commentMap[s.student_id]?.teacher_comment||''} onChange={e=>setComment(s.student_id,'teacher_comment',e.target.value)}
+                  style={{width:'100%',fontSize:11}} placeholder="ความเห็นครู..." />
+              </td>
+              <td style={{padding:3}}>
+                <input value={commentMap[s.student_id]?.parent_comment||''} onChange={e=>setComment(s.student_id,'parent_comment',e.target.value)}
+                  style={{width:'100%',fontSize:11}} placeholder="ความเห็นผู้ปกครอง..." />
+              </td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+    )}
+  </>);
+}
+
+// ── สรุปผลประเมินรายบุคคล (เดิม) ────────────
 function Papol6Main({ session, year }) {
   const [cls, setCls] = useState('');
   const [sem, setSem] = useState(1);
